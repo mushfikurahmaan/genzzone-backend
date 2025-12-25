@@ -1,0 +1,88 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Django
+*.log
+*.pot
+*.pyc
+local_settings.py
+local_settings.pyc
+db.sqlite3
+db.sqlite3-journal
+*.db
+/media
+/staticfiles
+/static
+/collected_static
+*.mo
+*.po
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+.env.*
+# But keep .env.example (it's a template)
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Testing
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Misc
+*.bak
+*.tmp
+.cache/
+*.pid
+*.seed
+*.pid.lock
+
+# OS
+Thumbs.db
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Secrets and credentials
+**/secrets.json
+**/credentials.json
+**/config.local.py
+**/settings.local.py
+**/*.key
+**/*.pem
+**/*.p12
+**/*.pfx
+
