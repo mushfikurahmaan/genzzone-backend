@@ -108,7 +108,7 @@ The API will be available at `http://localhost:8000`
 ```
 genzzone-backend/
 ├── backend/          # Django project settings
-│   ├── settings/     # Environment-specific settings
+│   ├── settings.py   # Production settings
 │   ├── urls.py       # URL configuration
 │   ├── wsgi.py       # WSGI configuration
 │   └── asgi.py       # ASGI configuration
