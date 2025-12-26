@@ -9,41 +9,16 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security
-SECRET_KEY = os.environ.get('SECRET_KEY')
-if not SECRET_KEY:
-    raise ValueError("SECRET_KEY environment variable must be set!")
-
+SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
 # Allowed hosts
-allowed_hosts_env = os.environ.get('ALLOWED_HOSTS', '')
-railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '')
-if allowed_hosts_env:
-    ALLOWED_HOSTS = [host.strip() for host in allowed_hosts_env.split(',') if host.strip()]
-elif railway_domain:
-    ALLOWED_HOSTS = [railway_domain, f'*.{railway_domain}']
-else:
-    ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [os.environ.get('RAILWAY_PUBLIC_DOMAIN', '*')]
 
 # Database
-DATABASE_URL = os.environ.get('DATABASE_URL')
-if DATABASE_URL:
-    DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.environ.get('DB_NAME'),
-            'USER': os.environ.get('DB_USER'),
-            'PASSWORD': os.environ.get('DB_PASSWORD'),
-            'HOST': os.environ.get('DB_HOST', 'localhost'),
-            'PORT': os.environ.get('DB_PORT', '5432'),
-        }
-    }
-    if not all([DATABASES['default']['NAME'], DATABASES['default']['USER'], DATABASES['default']['PASSWORD']]):
-        raise ValueError("Either DATABASE_URL or database credentials must be set!")
+DATABASES = {
+    'default': dj_database_url.parse(os.environ['DATABASE_URL'], conn_max_age=600)
+}
 
 # Applications
 INSTALLED_APPS = [
@@ -120,18 +95,13 @@ REST_FRAMEWORK = {
 }
 
 # CORS
-cors_origins_env = os.environ.get('CORS_ALLOWED_ORIGINS', '')
-if cors_origins_env:
-    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(',') if origin.strip()]
-else:
-    CORS_ALLOWED_ORIGINS = []
-    CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()]
 CORS_ALLOW_CREDENTIALS = True
 
 # Security settings
-SECURE_SSL_REDIRECT = os.environ.get('SECURE_SSL_REDIRECT', 'False').lower() == 'true'
-SESSION_COOKIE_SECURE = os.environ.get('SESSION_COOKIE_SECURE', 'True').lower() == 'true'
-CSRF_COOKIE_SECURE = os.environ.get('CSRF_COOKIE_SECURE', 'True').lower() == 'true'
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
@@ -140,5 +110,5 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
 
 # Third-party API keys
-STEADFAST_API_KEY = os.environ.get('STEADFAST_API_KEY', '')
-STEADFAST_SECRET_KEY = os.environ.get('STEADFAST_SECRET_KEY', '')
+STEADFAST_API_KEY = os.environ.get('STEADFAST_API_KEY')
+STEADFAST_SECRET_KEY = os.environ.get('STEADFAST_SECRET_KEY')
