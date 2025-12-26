@@ -137,3 +137,6 @@ X_FRAME_OPTIONS = 'DENY'
 # Third-party API keys
 STEADFAST_API_KEY = os.environ.get('STEADFAST_API_KEY')
 STEADFAST_SECRET_KEY = os.environ.get('STEADFAST_SECRET_KEY')
+
+# Admin URL path (for security - use a custom path in production)
+ADMIN_URL_PATH = os.environ.get('ADMIN_URL_PATH', 'admin/')
