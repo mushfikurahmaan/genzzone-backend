@@ -98,12 +98,32 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if origin.strip()]
 CORS_ALLOW_CREDENTIALS = True
 
+# CSRF Trusted Origins (required for Django 4.0+)
+CSRF_TRUSTED_ORIGINS = [
+    origin.strip() 
+    for origin in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') 
+    if origin.strip()
+]
+# Add Railway domain if available
+railway_domain = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if railway_domain and railway_domain != '*':
+    # Handle both formats: with or without https://
+    if railway_domain.startswith('http://') or railway_domain.startswith('https://'):
+        railway_url = railway_domain
+    else:
+        railway_url = f"https://{railway_domain}"
+    if railway_url not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(railway_url)
+
 # Security settings
 SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# Only use secure cookies if we're sure we're on HTTPS
+USE_HTTPS = os.environ.get('USE_HTTPS', 'True').lower() == 'true'
+SESSION_COOKIE_SECURE = USE_HTTPS
+CSRF_COOKIE_SECURE = USE_HTTPS
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SAMESITE = 'Lax'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
