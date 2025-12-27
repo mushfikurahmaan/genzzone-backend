@@ -87,10 +87,6 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# WhiteNoise configuration for static files
-# Using CompressedStaticFilesStorage (simpler, more reliable than Manifest)
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
@@ -145,8 +141,7 @@ ADMIN_URL_PATH = os.environ.get('ADMIN_URL_PATH', 'admin/')
 
 # ========= Cloudflare R2  =========
 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-
+# AWS S3/R2 Configuration
 AWS_ACCESS_KEY_ID = os.environ["R2_ACCESS_KEY_ID"]
 AWS_SECRET_ACCESS_KEY = os.environ["R2_SECRET_ACCESS_KEY"]
 AWS_STORAGE_BUCKET_NAME = os.environ["R2_BUCKET_NAME"]
@@ -167,3 +162,13 @@ AWS_S3_OBJECT_PARAMETERS = {
 
 AWS_S3_CUSTOM_DOMAIN = "media.genzzone.com"
 MEDIA_URL = "https://media.genzzone.com/"
+
+# Django 4.2+ storage configuration (replaces DEFAULT_FILE_STORAGE)
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
+    },
+}
