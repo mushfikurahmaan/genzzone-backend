@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.db.models import F
 from django.db import transaction
 from .models import Cart, CartItem, Order, OrderItem
@@ -12,7 +12,6 @@ from .serializers import (
 )
 from .steadfast_service import SteadfastService
 from products.models import Product
-from decimal import Decimal
 import logging
 
 logger = logging.getLogger(__name__)
@@ -90,40 +89,8 @@ class CreateOrderView(APIView):
             # Reduce product stock atomically
             Product.objects.filter(id=product.id).update(stock=F('stock') - quantity)
         
-        # Create order in Steadfast
-        steadfast_service = SteadfastService()
-        
-        # Prepare item description from order items
-        item_description = f"{quantity}x {product.name}"
-        if data.get('product_size'):
-            item_description += f" (Size: {data.get('product_size')})"
-        
-        # Create invoice ID from order ID
-        invoice = f"ORD-{order.id}"
-        
-        steadfast_response = steadfast_service.create_order(
-            invoice=invoice,
-            recipient_name=data['customer_name'],
-            recipient_phone=data['phone_number'],
-            recipient_address=data['address'],
-            cod_amount=float(total_amount),
-            recipient_email=order.customer_email if order.customer_email else None,
-            note=order.notes if order.notes else None,
-            item_description=item_description,
-            total_lot=quantity,
-            delivery_type=0  # 0 for home delivery
-        )
-        
-        # Update order with Steadfast tracking information if successful
-        if steadfast_response.get('status') == 200 and steadfast_response.get('consignment'):
-            consignment = steadfast_response['consignment']
-            order.steadfast_consignment_id = consignment.get('consignment_id')
-            order.steadfast_tracking_code = consignment.get('tracking_code', '')
-            order.steadfast_status = consignment.get('status', '')
-            order.save()
-            logger.info(f"Order {order.id} successfully created in Steadfast with consignment ID {order.steadfast_consignment_id}")
-        else:
-            logger.warning(f"Failed to create order {order.id} in Steadfast: {steadfast_response.get('message', 'Unknown error')}")
+        # Order is saved and will be sent to Steadfast later via admin panel
+        logger.info(f"Order {order.id} created successfully. Waiting for admin approval to send to Steadfast.")
         
         # Return the created order
         order_serializer = OrderSerializer(order)
@@ -396,21 +363,66 @@ class CheckoutFromCartView(APIView):
                 item_descriptions.append(item_desc)
                 total_lot += cart_item.quantity
         
-        # Create order in Steadfast
-        steadfast_service = SteadfastService()
+        # Order is saved and will be sent to Steadfast later via admin panel
+        logger.info(f"Order {order.id} created successfully. Waiting for admin approval to send to Steadfast.")
         
-        # Combine all item descriptions
+        # Clear the cart after successful order
+        cart.items.all().delete()
+        cart.delete()
+        
+        # Return the created order
+        order_serializer = OrderSerializer(order)
+        return Response(order_serializer.data, status=status.HTTP_201_CREATED)
+
+
+class SendOrderToSteadfastView(APIView):
+    """Admin API view for sending an order to Steadfast"""
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def post(self, request, order_id):
+        """Send an order to Steadfast"""
+        try:
+            order = Order.objects.get(id=order_id)
+        except Order.DoesNotExist:
+            return Response(
+                {'error': 'Order not found'}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Check if order is already sent to Steadfast
+        if order.steadfast_consignment_id:
+            return Response(
+                {'error': 'Order has already been sent to Steadfast', 
+                 'consignment_id': order.steadfast_consignment_id,
+                 'tracking_code': order.steadfast_tracking_code},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Prepare item description from order items
+        item_descriptions = []
+        total_lot = 0
+        
+        for order_item in order.items.all():
+            item_desc = f"{order_item.quantity}x {order_item.product.name}"
+            if order_item.product_size:
+                item_desc += f" (Size: {order_item.product_size})"
+            item_descriptions.append(item_desc)
+            total_lot += order_item.quantity
+        
         item_description = "; ".join(item_descriptions)
         
         # Create invoice ID from order ID
         invoice = f"ORD-{order.id}"
         
+        # Send order to Steadfast
+        steadfast_service = SteadfastService()
+        
         steadfast_response = steadfast_service.create_order(
             invoice=invoice,
-            recipient_name=data['customer_name'],
-            recipient_phone=data['phone_number'],
-            recipient_address=data['address'],
-            cod_amount=float(total_amount),
+            recipient_name=order.customer_name,
+            recipient_phone=order.customer_phone,
+            recipient_address=order.shipping_address,
+            cod_amount=float(order.total_amount),
             recipient_email=order.customer_email if order.customer_email else None,
             note=order.notes if order.notes else None,
             item_description=item_description,
@@ -424,15 +436,22 @@ class CheckoutFromCartView(APIView):
             order.steadfast_consignment_id = consignment.get('consignment_id')
             order.steadfast_tracking_code = consignment.get('tracking_code', '')
             order.steadfast_status = consignment.get('status', '')
+            order.status = 'processing'  # Update order status to processing
             order.save()
-            logger.info(f"Order {order.id} successfully created in Steadfast with consignment ID {order.steadfast_consignment_id}")
+            logger.info(f"Order {order.id} successfully sent to Steadfast with consignment ID {order.steadfast_consignment_id}")
+            
+            return Response({
+                'message': 'Order successfully sent to Steadfast',
+                'order_id': order.id,
+                'consignment_id': order.steadfast_consignment_id,
+                'tracking_code': order.steadfast_tracking_code,
+                'status': order.steadfast_status
+            }, status=status.HTTP_200_OK)
         else:
-            logger.warning(f"Failed to create order {order.id} in Steadfast: {steadfast_response.get('message', 'Unknown error')}")
-        
-        # Clear the cart after successful order
-        cart.items.all().delete()
-        cart.delete()
-        
-        # Return the created order
-        order_serializer = OrderSerializer(order)
-        return Response(order_serializer.data, status=status.HTTP_201_CREATED)
+            error_message = steadfast_response.get('message', 'Unknown error')
+            logger.warning(f"Failed to send order {order.id} to Steadfast: {error_message}")
+            
+            return Response({
+                'error': 'Failed to send order to Steadfast',
+                'message': error_message
+            }, status=status.HTTP_400_BAD_REQUEST)
