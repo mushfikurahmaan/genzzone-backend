@@ -30,7 +30,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'corsheaders',
-    'storages',  # For S3 storage
+    'storages',  # For R2 storage (S3-compatible)
     'products',
     'orders',
 ]
@@ -143,11 +143,19 @@ STEADFAST_SECRET_KEY = os.environ.get('STEADFAST_SECRET_KEY')
 ADMIN_URL_PATH = os.environ.get('ADMIN_URL_PATH', 'admin/')
 
 
-# AWS S3 Configuration
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+# Cloudflare R2 Configuration (S3-compatible)
+R2_ACCOUNT_ID = os.environ['R2_ACCOUNT_ID']
+R2_ACCESS_KEY_ID = os.environ['R2_ACCESS_KEY_ID']
+R2_SECRET_ACCESS_KEY = os.environ['R2_SECRET_ACCESS_KEY']
+R2_BUCKET_NAME = os.environ['R2_BUCKET_NAME']
+R2_ENDPOINT_URL = os.environ.get('R2_ENDPOINT_URL', f'https://{R2_ACCOUNT_ID}.r2.cloudflarestorage.com')
+R2_PUBLIC_URL = os.environ['R2_PUBLIC_URL']
+
+# S3-compatible settings for R2
+AWS_ACCESS_KEY_ID = R2_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = R2_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME = R2_BUCKET_NAME
+AWS_S3_ENDPOINT_URL = R2_ENDPOINT_URL
 AWS_S3_SIGNATURE_VERSION = 's3v4'
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
@@ -156,8 +164,8 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
-# Use S3 for media files (user uploads)
+# Use R2 for media files (user uploads)
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
-# Media files URL (S3)
-MEDIA_URL = f'https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/'
+# Media files URL (R2)
+MEDIA_URL = R2_PUBLIC_URL if R2_PUBLIC_URL.endswith('/') else f'{R2_PUBLIC_URL}/'
