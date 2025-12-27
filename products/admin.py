@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.utils.html import format_html
 from .models import Product, BestSelling, Notification
 
 
@@ -10,7 +11,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ['is_active', 'stock']
     fieldsets = (
         ('Product Information', {
-            'fields': ('name', 'description', 'category', 'image')
+            'fields': ('name', 'description', 'category', 'image', 'image_preview')
         }),
         ('Pricing', {
             'fields': ('regular_price', 'offer_price'),
@@ -24,7 +25,18 @@ class ProductAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'image_preview']
+
+    def image_preview(self, obj):
+        """Display image preview in admin panel"""
+        if obj.image:
+            return format_html(
+                '<img src="{}" style="max-width: 300px; max-height: 300px; border: 1px solid #ddd; border-radius: 4px; padding: 5px; background: #fff;" />',
+                obj.image.url
+            )
+        return format_html('<span style="color: #999;">No image uploaded</span>')
+    
+    image_preview.short_description = 'Image Preview'
 
 
 @admin.register(BestSelling)
