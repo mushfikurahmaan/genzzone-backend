@@ -38,7 +38,7 @@ class OrderItemInline(admin.TabularInline):
     def subtotal_display(self, obj):
         """Display subtotal for order item"""
         if obj.pk:
-            return f"${obj.get_subtotal():.2f}"
+            return f"৳{obj.get_subtotal():.2f}"
         return "-"
     subtotal_display.short_description = 'Subtotal'
 
