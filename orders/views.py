@@ -7,8 +7,7 @@ from django.db import transaction
 from .models import Cart, CartItem, Order, OrderItem
 from .serializers import (
     SimpleOrderSerializer, OrderSerializer, CartSerializer,
-    CartItemSerializer, AddToCartSerializer, UpdateCartItemSerializer,
-    CartCheckoutSerializer
+    CartItemSerializer, AddToCartSerializer, UpdateCartItemSerializer
 )
 from .steadfast_service import SteadfastService
 from products.models import Product
@@ -18,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class CreateOrderView(APIView):
-    """API view for creating a new order"""
+    """API view for creating a new order with multiple products"""
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -28,32 +27,54 @@ class CreateOrderView(APIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         data = serializer.validated_data
+        products_data = data['products']
         
-        # Get the product
-        try:
-            product = Product.objects.get(id=data['product_id'], is_active=True)
-        except Product.DoesNotExist:
+        # Validate products array is not empty
+        if not products_data:
             return Response(
-                {'error': 'Product not found or inactive'}, 
-                status=status.HTTP_404_NOT_FOUND
-            )
-        
-        # Get quantity from request (default to 1)
-        quantity = data.get('quantity', 1)
-        
-        # Check if product is in stock
-        if product.stock <= 0:
-            return Response(
-                {'error': 'Product is out of stock'}, 
+                {'error': 'At least one product is required'}, 
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Check if requested quantity is available
-        if quantity > product.stock:
-            return Response(
-                {'error': f'Only {product.stock} items available in stock'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        # Validate all products exist and are in stock
+        products_to_order = []
+        for product_data in products_data:
+            product_id = product_data['product_id']
+            quantity = product_data['quantity']
+            
+            try:
+                product = Product.objects.get(id=product_id, is_active=True)
+            except Product.DoesNotExist:
+                return Response(
+                    {'error': f'Product with ID {product_id} not found or inactive'}, 
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Check if product is in stock
+            if product.stock <= 0:
+                return Response(
+                    {'error': f'Product "{product.name}" is out of stock'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if requested quantity is available
+            if quantity > product.stock:
+                return Response(
+                    {'error': f'Product "{product.name}" only has {product.stock} items available in stock'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Use unit_price from request if provided, otherwise use product's current_price
+            unit_price = product_data.get('unit_price')
+            if unit_price is None:
+                unit_price = product.current_price
+            
+            products_to_order.append({
+                'product': product,
+                'quantity': quantity,
+                'price': unit_price,
+                'product_size': product_data.get('product_size', '')
+            })
         
         # Get or create session key
         session_key = request.session.session_key
@@ -61,8 +82,8 @@ class CreateOrderView(APIView):
             request.session.create()
             session_key = request.session.session_key
         
-        # Calculate total amount (using current price * quantity)
-        total_amount = product.current_price * quantity
+        # Use total_price from frontend (includes delivery charge)
+        total_amount = data['total_price']
         
         # Create the order and reduce stock atomically
         with transaction.atomic():
@@ -77,20 +98,23 @@ class CreateOrderView(APIView):
                 customer_phone=data['phone_number'],
             )
             
-            # Create order item
-            OrderItem.objects.create(
-                order=order,
-                product=product,
-                quantity=quantity,
-                price=product.current_price,
-                product_size=data.get('product_size', '')
-            )
-            
-            # Reduce product stock atomically
-            Product.objects.filter(id=product.id).update(stock=F('stock') - quantity)
+            # Create order items for each product
+            for product_info in products_to_order:
+                OrderItem.objects.create(
+                    order=order,
+                    product=product_info['product'],
+                    quantity=product_info['quantity'],
+                    price=product_info['price'],
+                    product_size=product_info['product_size']
+                )
+                
+                # Reduce product stock atomically
+                Product.objects.filter(id=product_info['product'].id).update(
+                    stock=F('stock') - product_info['quantity']
+                )
         
         # Order is saved and will be sent to Steadfast later via admin panel
-        logger.info(f"Order {order.id} created successfully. Waiting for admin approval to send to Steadfast.")
+        logger.info(f"Order {order.id} created successfully with {len(products_to_order)} product(s). Waiting for admin approval to send to Steadfast.")
         
         # Return the created order
         order_serializer = OrderSerializer(order)
@@ -280,101 +304,6 @@ class RemoveCartItemView(APIView):
         return Response(cart_serializer.data, status=status.HTTP_200_OK)
 
 
-class CheckoutFromCartView(APIView):
-    """API view for creating an order from cart items"""
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = CartCheckoutSerializer(data=request.data)
-        
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        data = serializer.validated_data
-        
-        # Get or create session key
-        session_key = request.session.session_key
-        if not session_key:
-            return Response(
-                {'error': 'No active session'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Get cart
-        try:
-            cart = Cart.objects.get(session_key=session_key)
-        except Cart.DoesNotExist:
-            return Response(
-                {'error': 'Cart is empty'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Check if cart has items
-        cart_items = cart.items.all()
-        if not cart_items.exists():
-            return Response(
-                {'error': 'Cart is empty'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        # Validate all items are in stock
-        for item in cart_items:
-            if item.quantity > item.product.stock:
-                return Response(
-                    {'error': f'Product "{item.product.name}" only has {item.product.stock} items in stock'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        
-        # Calculate total amount
-        total_amount = cart.get_total()
-        
-        # Create the order, order items, and reduce stock atomically
-        product_size = data.get('product_size', '')
-        item_descriptions = []
-        total_lot = 0
-        
-        with transaction.atomic():
-            # Create the order
-            order = Order.objects.create(
-                session_key=session_key,
-                total_amount=total_amount,
-                status='pending',
-                shipping_address=data['address'],
-                shipping_state=data.get('district', ''),
-                customer_name=data['customer_name'],
-                customer_phone=data['phone_number'],
-            )
-            
-            # Create order items from cart items and reduce stock
-            for cart_item in cart_items:
-                OrderItem.objects.create(
-                    order=order,
-                    product=cart_item.product,
-                    quantity=cart_item.quantity,
-                    price=cart_item.product.current_price,
-                    product_size=product_size
-                )
-                # Reduce product stock atomically
-                Product.objects.filter(id=cart_item.product.id).update(stock=F('stock') - cart_item.quantity)
-                # Build item description
-                item_desc = f"{cart_item.quantity}x {cart_item.product.name}"
-                if product_size:
-                    item_desc += f" (Size: {product_size})"
-                item_descriptions.append(item_desc)
-                total_lot += cart_item.quantity
-        
-        # Order is saved and will be sent to Steadfast later via admin panel
-        logger.info(f"Order {order.id} created successfully. Waiting for admin approval to send to Steadfast.")
-        
-        # Clear the cart after successful order
-        cart.items.all().delete()
-        cart.delete()
-        
-        # Return the created order
-        order_serializer = OrderSerializer(order)
-        return Response(order_serializer.data, status=status.HTTP_201_CREATED)
-
-
 class SendOrderToSteadfastView(APIView):
     """Admin API view for sending an order to Steadfast"""
     permission_classes = [IsAuthenticated, IsAdminUser]
@@ -424,7 +353,7 @@ class SendOrderToSteadfastView(APIView):
             recipient_address=order.shipping_address,
             cod_amount=float(order.total_amount),
             recipient_email=order.customer_email if order.customer_email else None,
-            note=order.notes if order.notes else None,
+            note=None,
             item_description=item_description,
             total_lot=total_lot,
             delivery_type=0  # 0 for home delivery
@@ -436,7 +365,7 @@ class SendOrderToSteadfastView(APIView):
             order.steadfast_consignment_id = consignment.get('consignment_id')
             order.steadfast_tracking_code = consignment.get('tracking_code', '')
             order.steadfast_status = consignment.get('status', '')
-            order.status = 'processing'  # Update order status to processing
+            order.status = 'sent'  # Update order status to sent
             order.save()
             logger.info(f"Order {order.id} successfully sent to Steadfast with consignment ID {order.steadfast_consignment_id}")
             

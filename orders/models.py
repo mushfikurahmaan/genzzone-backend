@@ -48,6 +48,7 @@ class Order(models.Model):
     """Order model"""
     STATUS_CHOICES = [
         ('pending', 'Pending'),
+        ('sent', 'Sent'),
         ('processing', 'Processing'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),

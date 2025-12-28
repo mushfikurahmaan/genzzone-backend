@@ -70,7 +70,7 @@ class OrderSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'session_key', 'total_amount', 'status', 'shipping_address',
             'shipping_city', 'shipping_state', 'shipping_zip', 'shipping_country',
-            'customer_name', 'customer_email', 'customer_phone', 'notes',
+            'customer_name', 'customer_email', 'customer_phone',
             'steadfast_consignment_id', 'steadfast_tracking_code', 'steadfast_status',
             'items', 'created_at', 'updated_at'
         ]
@@ -90,22 +90,24 @@ class CreateOrderSerializer(serializers.Serializer):
     notes = serializers.CharField(required=False, allow_blank=True)
 
 
-class SimpleOrderSerializer(serializers.Serializer):
-    """Simplified serializer for creating an order from product page"""
-    customer_name = serializers.CharField(max_length=200)
-    district = serializers.CharField(max_length=100)
-    address = serializers.CharField()  # Full address as text
-    phone_number = serializers.CharField(max_length=20)
+class ProductOrderItemSerializer(serializers.Serializer):
+    """Serializer for individual product in order"""
     product_id = serializers.IntegerField()
-    product_size = serializers.CharField(max_length=50, allow_blank=True)
-    quantity = serializers.IntegerField(min_value=1, default=1)
+    product_name = serializers.CharField(required=False, allow_blank=True)
+    product_size = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    quantity = serializers.IntegerField(min_value=1)
+    unit_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    product_total = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
 
 
-class CartCheckoutSerializer(serializers.Serializer):
-    """Serializer for creating an order from cart"""
+class SimpleOrderSerializer(serializers.Serializer):
+    """Serializer for creating a multi-product order"""
     customer_name = serializers.CharField(max_length=200)
     district = serializers.CharField(max_length=100)
     address = serializers.CharField()  # Full address as text
     phone_number = serializers.CharField(max_length=20)
-    product_size = serializers.CharField(max_length=50, allow_blank=True, required=False)
+    products = ProductOrderItemSerializer(many=True)
+    product_total = serializers.DecimalField(max_digits=10, decimal_places=2)
+    delivery_charge = serializers.DecimalField(max_digits=10, decimal_places=2)
+    total_price = serializers.DecimalField(max_digits=10, decimal_places=2)
 
