@@ -18,9 +18,11 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from orders.views import get_csrf_token
 
 urlpatterns = [
     path(settings.ADMIN_URL_PATH, admin.site.urls),
+    path('api/csrf/', get_csrf_token, name='csrf'),
     path('', include('products.urls')),
     path('', include('orders.urls')),
 ]

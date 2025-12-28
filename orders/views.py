@@ -4,6 +4,9 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.db.models import F
 from django.db import transaction
+from django.http import JsonResponse
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.http import require_http_methods
 from .models import Cart, CartItem, Order, OrderItem
 from .serializers import (
     SimpleOrderSerializer, OrderSerializer, CartSerializer,
@@ -14,6 +17,16 @@ from products.models import Product
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+@require_http_methods(["GET"])
+@ensure_csrf_cookie
+def get_csrf_token(request):
+    """
+    Returns CSRF token for the client
+    This endpoint ensures the CSRF cookie is set
+    """
+    return JsonResponse({'detail': 'CSRF cookie set'})
 
 
 class CreateOrderView(APIView):
