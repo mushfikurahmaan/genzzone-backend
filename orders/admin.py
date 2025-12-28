@@ -1,31 +1,32 @@
 from django.contrib import admin
 from django.contrib import messages
-from .models import Cart, CartItem, Order, OrderItem
+from django.utils.translation import gettext_lazy as _
+from .models import Order, OrderItem
 from .steadfast_service import SteadfastService
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class CartItemInline(admin.TabularInline):
-    model = CartItem
-    extra = 0
-    readonly_fields = ['created_at', 'updated_at']
+class UsedStatusFilter(admin.SimpleListFilter):
+    """Filter that only shows statuses that are actually used in orders"""
+    title = _('status')
+    parameter_name = 'status'
+
+    def lookups(self, request, model_admin):
+        # Get only statuses that exist in the database
+        used_statuses = Order.objects.values_list('status', flat=True).distinct()
+        status_choices = dict(Order.STATUS_CHOICES)
+        return [(status, status_choices.get(status, status)) for status in used_statuses if status in status_choices]
+
+    def queryset(self, request, queryset):
+        if self.value():
+            return queryset.filter(status=self.value())
+        return queryset
 
 
-@admin.register(Cart)
-class CartAdmin(admin.ModelAdmin):
-    list_display = ['session_key', 'get_item_count', 'get_total', 'created_at', 'updated_at']
-    readonly_fields = ['session_key', 'created_at', 'updated_at']
-    inlines = [CartItemInline]
-
-    def get_item_count(self, obj):
-        return obj.get_item_count()
-    get_item_count.short_description = 'Item Count'
-
-    def get_total(self, obj):
-        return f"${obj.get_total():.2f}"
-    get_total.short_description = 'Total'
+# Cart admin removed - not needed in admin panel
+# CartItemInline and CartAdmin classes removed
 
 
 class OrderItemInline(admin.TabularInline):
@@ -45,13 +46,14 @@ class OrderItemInline(admin.TabularInline):
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'customer_name', 'customer_phone', 'total_amount', 'status', 'get_steadfast_status', 'get_item_count', 'created_at']
-    list_filter = ['status', 'created_at', 'shipping_state']
+    list_display_links = ['customer_name']
+    list_filter = [UsedStatusFilter, 'created_at', 'shipping_state']
     search_fields = ['customer_name', 'customer_email', 'customer_phone', 'session_key', 'steadfast_tracking_code', 'id']
-    readonly_fields = ['session_key', 'created_at', 'updated_at', 'steadfast_consignment_id', 'steadfast_tracking_code', 'steadfast_status']
+    readonly_fields = ['session_key', 'created_at', 'updated_at', 'steadfast_consignment_id', 'steadfast_tracking_code', 'steadfast_status', 'status']
     inlines = [OrderItemInline]
     fieldsets = (
         ('Order Information', {
-            'fields': ('status', 'total_amount', 'session_key')
+            'fields': ('total_amount',)
         }),
         ('Customer Information', {
             'fields': ('customer_name', 'customer_email', 'customer_phone')
