@@ -121,12 +121,24 @@ if railway_domain and railway_domain != '*':
 SECURE_SSL_REDIRECT = False
 # Only use secure cookies if we're sure we're on HTTPS
 USE_HTTPS = os.environ.get('USE_HTTPS', 'True').lower() == 'true'
+
+# CSRF Configuration - CRITICAL for cross-origin subdomain requests
+CSRF_COOKIE_HTTPONLY = False  # Allow JavaScript to read CSRF token
+CSRF_USE_SESSIONS = False  # Use cookie-based CSRF, not session-based
+CSRF_COOKIE_NAME = 'csrftoken'  # Explicit cookie name
+CSRF_COOKIE_SECURE = USE_HTTPS  # Use secure flag in production
+CSRF_COOKIE_SAMESITE = 'None'  # Required for cross-origin requests
+CSRF_COOKIE_DOMAIN = '.genzzone.com'  # Share cookie across subdomains (note the leading dot)
+CSRF_COOKIE_PATH = '/'  # Cookie available on all paths
+
+# Session Configuration
 SESSION_COOKIE_SECURE = USE_HTTPS
-CSRF_COOKIE_SECURE = USE_HTTPS
 SESSION_COOKIE_HTTPONLY = True
-SESSION_COOKIE_SAMESITE = 'Lax'
-CSRF_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_SAMESITE = 'None'  # Required for cross-origin requests
+SESSION_COOKIE_DOMAIN = '.genzzone.com'  # Share session across subdomains
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Additional Security
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
