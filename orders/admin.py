@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
+from django import forms
 from .models import Order, OrderItem
 from .steadfast_service import SteadfastService
 import logging
@@ -35,6 +36,21 @@ class OrderItemInline(admin.TabularInline):
     extra = 0
     readonly_fields = ['image_preview', 'created_at', 'subtotal_display']
     fields = ['product', 'image_preview', 'quantity', 'price', 'product_size', 'subtotal_display', 'created_at']
+    
+    formfield_overrides = {
+        forms.fields.IntegerField: {'widget': forms.NumberInput(attrs={'style': 'width: 60px;'})},
+        forms.fields.DecimalField: {'widget': forms.NumberInput(attrs={'style': 'width: 80px;'})},
+    }
+    
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        field = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'quantity':
+            field.widget.attrs['style'] = 'width: 60px;'
+        elif db_field.name == 'price':
+            field.widget.attrs['style'] = 'width: 90px;'
+        elif db_field.name == 'product_size':
+            field.widget.attrs['style'] = 'width: 70px;'
+        return field
     
     def image_preview(self, obj):
         """Display a button to view product image"""
