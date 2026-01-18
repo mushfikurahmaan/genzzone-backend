@@ -84,6 +84,9 @@ class Product(models.Model):
         help_text='Deprecated: Use regular_price and offer_price instead'
     )
     image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image2 = models.ImageField(upload_to='products/', blank=True, null=True, help_text='Second product image')
+    image3 = models.ImageField(upload_to='products/', blank=True, null=True, help_text='Third product image')
+    image4 = models.ImageField(upload_to='products/', blank=True, null=True, help_text='Fourth product image')
     stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

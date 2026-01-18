@@ -35,7 +35,11 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ['is_active', 'stock']
     fieldsets = (
         ('Product Information', {
-            'fields': ('name', 'description', 'category', 'image')
+            'fields': ('name', 'description', 'category')
+        }),
+        ('Product Images', {
+            'fields': ('image', 'image2', 'image3', 'image4'),
+            'description': 'Upload up to 4 product images. The first image is the main/primary image.'
         }),
         ('Pricing', {
             'fields': ('regular_price', 'offer_price'),
