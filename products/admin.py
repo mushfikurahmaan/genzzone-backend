@@ -1,5 +1,30 @@
 from django.contrib import admin
-from .models import Product, BestSelling, Notification
+from .models import Product, BestSelling, Notification, Category
+
+
+@admin.register(Category)
+class CategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'parent', 'order', 'is_active', 'created_at']
+    list_filter = ['parent', 'is_active', 'created_at']
+    search_fields = ['name', 'slug']
+    list_editable = ['order', 'is_active']
+    prepopulated_fields = {'slug': ('name',)}
+    fieldsets = (
+        ('Category Information', {
+            'fields': ('name', 'slug', 'parent', 'order', 'is_active')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ['created_at', 'updated_at']
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "parent":
+            # Only show parent categories (those without a parent) as options
+            kwargs["queryset"] = Category.objects.filter(parent__isnull=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
 
 @admin.register(Product)

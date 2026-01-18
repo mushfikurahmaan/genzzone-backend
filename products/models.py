@@ -1,27 +1,62 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.utils.text import slugify
 from decimal import Decimal
+
+
+class Category(models.Model):
+    """Hierarchical category model for products"""
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=100, unique=True)
+    parent = models.ForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='children'
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text='Display order (lower numbers appear first)'
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = 'Category'
+        verbose_name_plural = 'Categories'
+
+    def __str__(self):
+        if self.parent:
+            return f"{self.parent.name} → {self.name}"
+        return self.name
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
+
+    @property
+    def is_parent(self):
+        """Returns True if this category has children"""
+        return self.children.exists()
+
+    def get_all_children(self):
+        """Returns all child categories"""
+        return self.children.filter(is_active=True).order_by('order', 'name')
 
 
 class Product(models.Model):
     """Product model for e-commerce items"""
     
-    CATEGORY_CHOICES = [
-        ('men', 'Men'),
-        ('womens', 'Womens'),
-        ('combo', 'Combo'),
-        ('shirt-combo', 'Shirt Combo'),
-        ('panjabi-combo', 'Panjabi Combo'),
-        ('shirts', 'Shirts'),
-        ('panjabi', 'Panjabi'),
-    ]
-    
     name = models.CharField(max_length=200)
     description = models.TextField()
-    category = models.CharField(
-        max_length=20,
-        choices=CATEGORY_CHOICES,
-        default='men',
+    category = models.ForeignKey(
+        Category,
+        on_delete=models.PROTECT,
+        related_name='products',
         help_text='Product category'
     )
     regular_price = models.DecimalField(
