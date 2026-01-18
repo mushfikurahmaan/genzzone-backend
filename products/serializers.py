@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, BestSelling, Notification, Category
+from .models import Product, BestSelling, Notification, Category, ProductColor
 
 
 class CategoryChildSerializer(serializers.ModelSerializer):
@@ -41,6 +41,14 @@ class ProductCategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'slug', 'parent_id', 'parent_name', 'parent_slug']
 
 
+class ProductColorSerializer(serializers.ModelSerializer):
+    """Serializer for ProductColor model"""
+    
+    class Meta:
+        model = ProductColor
+        fields = ['id', 'name', 'image', 'order', 'is_active']
+
+
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product model"""
     current_price = serializers.ReadOnlyField()
@@ -53,13 +61,20 @@ class ProductSerializer(serializers.ModelSerializer):
     )
     # For backward compatibility - returns category slug
     category_slug = serializers.CharField(source='category.slug', read_only=True)
+    # Include product colors (only active ones)
+    colors = serializers.SerializerMethodField()
+    
+    def get_colors(self, obj):
+        active_colors = obj.colors.filter(is_active=True)
+        return ProductColorSerializer(active_colors, many=True, context=self.context).data
     
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'category', 'category_id', 'category_slug',
             'regular_price', 'offer_price', 'current_price', 'has_offer', 
-            'image', 'image2', 'image3', 'image4', 'stock', 'is_active', 'created_at', 'updated_at'
+            'image', 'image2', 'image3', 'image4', 'stock', 'is_active', 
+            'colors', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'current_price', 'has_offer']
 
