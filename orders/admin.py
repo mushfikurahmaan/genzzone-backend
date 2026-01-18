@@ -34,7 +34,7 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
     readonly_fields = ['image_preview', 'created_at', 'subtotal_display']
-    fields = ['image_preview', 'product', 'quantity', 'price', 'product_size', 'subtotal_display', 'created_at']
+    fields = ['product', 'image_preview', 'quantity', 'price', 'product_size', 'subtotal_display', 'created_at']
     
     def image_preview(self, obj):
         """Display a button to view product image"""
