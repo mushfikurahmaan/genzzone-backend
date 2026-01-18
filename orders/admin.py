@@ -35,7 +35,7 @@ class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
     readonly_fields = ['image_preview', 'created_at', 'subtotal_display']
-    fields = ['product', 'image_preview', 'quantity', 'price', 'product_size', 'subtotal_display', 'created_at']
+    fields = ['product', 'image_preview', 'quantity', 'price', 'product_size', 'product_color', 'subtotal_display', 'created_at']
     
     formfield_overrides = {
         forms.fields.IntegerField: {'widget': forms.NumberInput(attrs={'style': 'width: 60px;'})},
@@ -50,6 +50,8 @@ class OrderItemInline(admin.TabularInline):
             field.widget.attrs['style'] = 'width: 90px;'
         elif db_field.name == 'product_size':
             field.widget.attrs['style'] = 'width: 70px;'
+        elif db_field.name == 'product_color':
+            field.widget.attrs['style'] = 'width: 100px;'
         return field
     
     def image_preview(self, obj):
@@ -165,8 +167,13 @@ class OrderAdmin(admin.ModelAdmin):
             
             for order_item in order.items.all():
                 item_desc = f"{order_item.quantity}x {order_item.product.name}"
+                details = []
                 if order_item.product_size:
-                    item_desc += f" (Size: {order_item.product_size})"
+                    details.append(f"Size: {order_item.product_size}")
+                if order_item.product_color:
+                    details.append(f"Color: {order_item.product_color}")
+                if details:
+                    item_desc += f" ({', '.join(details)})"
                 item_descriptions.append(item_desc)
                 total_lot += order_item.quantity
             
@@ -287,8 +294,13 @@ class OrderAdmin(admin.ModelAdmin):
             
             for order_item in order.items.all():
                 item_desc = f"{order_item.quantity}x {order_item.product.name}"
+                details = []
                 if order_item.product_size:
-                    item_desc += f" (Size: {order_item.product_size})"
+                    details.append(f"Size: {order_item.product_size}")
+                if order_item.product_color:
+                    details.append(f"Color: {order_item.product_color}")
+                if details:
+                    item_desc += f" ({', '.join(details)})"
                 item_descriptions.append(item_desc)
                 total_lot += order_item.quantity
             

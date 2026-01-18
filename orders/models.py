@@ -88,6 +88,7 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)  # Store price at time of order
     product_size = models.CharField(max_length=50, blank=True, help_text='Product size selected by customer')
+    product_color = models.CharField(max_length=100, blank=True, help_text='Product color selected by customer')
     product_image = models.URLField(max_length=500, blank=True, help_text='Product image URL at time of order')
     created_at = models.DateTimeField(auto_now_add=True)
 

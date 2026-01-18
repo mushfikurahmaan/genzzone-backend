@@ -87,6 +87,7 @@ class CreateOrderView(APIView):
                 'quantity': quantity,
                 'price': unit_price,
                 'product_size': product_data.get('product_size', ''),
+                'product_color': product_data.get('product_color', ''),
                 'product_image': product_data.get('product_image', '')
             })
         
@@ -120,6 +121,7 @@ class CreateOrderView(APIView):
                     quantity=product_info['quantity'],
                     price=product_info['price'],
                     product_size=product_info['product_size'],
+                    product_color=product_info['product_color'],
                     product_image=product_info['product_image']
                 )
                 
@@ -348,8 +350,13 @@ class SendOrderToSteadfastView(APIView):
         
         for order_item in order.items.all():
             item_desc = f"{order_item.quantity}x {order_item.product.name}"
+            details = []
             if order_item.product_size:
-                item_desc += f" (Size: {order_item.product_size})"
+                details.append(f"Size: {order_item.product_size}")
+            if order_item.product_color:
+                details.append(f"Color: {order_item.product_color}")
+            if details:
+                item_desc += f" ({', '.join(details)})"
             item_descriptions.append(item_desc)
             total_lot += order_item.quantity
         
