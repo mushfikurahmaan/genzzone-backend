@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'storages',  # For R2 storage (S3-compatible)
     'products',
     'orders',
+    'accounts',
 ]
 
 # Middleware
