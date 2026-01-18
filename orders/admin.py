@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
+from django.utils.html import format_html
 from .models import Order, OrderItem
 from .steadfast_service import SteadfastService
 import logging
@@ -32,8 +33,29 @@ class UsedStatusFilter(admin.SimpleListFilter):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ['created_at', 'subtotal_display']
-    fields = ['product', 'quantity', 'price', 'product_size', 'subtotal_display', 'created_at']
+    readonly_fields = ['image_preview', 'created_at', 'subtotal_display']
+    fields = ['image_preview', 'product', 'quantity', 'price', 'product_size', 'subtotal_display', 'created_at']
+    
+    def image_preview(self, obj):
+        """Display product image as a thumbnail with view button"""
+        image_url = None
+        if obj.pk and obj.product_image:
+            image_url = obj.product_image
+        elif obj.pk and obj.product and obj.product.image:
+            # Fallback to product's current image if order doesn't have saved image
+            image_url = obj.product.image.url
+        
+        if image_url:
+            return format_html(
+                '<div style="display: flex; align-items: center; gap: 8px;">'
+                '<img src="{}" style="max-height: 60px; max-width: 60px; object-fit: cover; border-radius: 4px;" />'
+                '<a href="{}" target="_blank" style="padding: 4px 8px; background: #417690; color: white; '
+                'text-decoration: none; border-radius: 4px; font-size: 11px;">View</a>'
+                '</div>',
+                image_url, image_url
+            )
+        return "-"
+    image_preview.short_description = 'Image'
     
     def subtotal_display(self, obj):
         """Display subtotal for order item"""
