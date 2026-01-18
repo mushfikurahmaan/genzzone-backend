@@ -10,12 +10,16 @@ class Product(models.Model):
         ('men', 'Men'),
         ('womens', 'Womens'),
         ('combo', 'Combo'),
+        ('shirt-combo', 'Shirt Combo'),
+        ('panjabi-combo', 'Panjabi Combo'),
+        ('shirts', 'Shirts'),
+        ('panjabi', 'Panjabi'),
     ]
     
     name = models.CharField(max_length=200)
     description = models.TextField()
     category = models.CharField(
-        max_length=10,
+        max_length=20,
         choices=CATEGORY_CHOICES,
         default='men',
         help_text='Product category'
