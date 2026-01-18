@@ -37,7 +37,7 @@ class OrderItemInline(admin.TabularInline):
     fields = ['image_preview', 'product', 'quantity', 'price', 'product_size', 'subtotal_display', 'created_at']
     
     def image_preview(self, obj):
-        """Display product image as a thumbnail with view button"""
+        """Display a button to view product image"""
         image_url = None
         if obj.pk and obj.product_image:
             image_url = obj.product_image
@@ -47,12 +47,9 @@ class OrderItemInline(admin.TabularInline):
         
         if image_url:
             return format_html(
-                '<div style="display: flex; align-items: center; gap: 8px;">'
-                '<img src="{}" style="max-height: 60px; max-width: 60px; object-fit: cover; border-radius: 4px;" />'
-                '<a href="{}" target="_blank" style="padding: 4px 8px; background: #417690; color: white; '
-                'text-decoration: none; border-radius: 4px; font-size: 11px;">View</a>'
-                '</div>',
-                image_url, image_url
+                '<a href="{}" target="_blank" style="padding: 5px 10px; background: #417690; color: white; '
+                'text-decoration: none; border-radius: 4px; font-size: 12px;">View Image</a>',
+                image_url
             )
         return "-"
     image_preview.short_description = 'Image'
