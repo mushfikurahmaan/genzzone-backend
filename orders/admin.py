@@ -48,7 +48,7 @@ class OrderItemInline(admin.TabularInline):
         if image_url:
             return format_html(
                 '<a href="{}" target="_blank" style="padding: 5px 10px; background: #417690; color: white; '
-                'text-decoration: none; border-radius: 4px; font-size: 12px;">View Image</a>',
+                'text-decoration: none; border-radius: 4px; font-size: 12px;">View</a>',
                 image_url
             )
         return "-"
