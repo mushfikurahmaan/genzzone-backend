@@ -1,5 +1,11 @@
 from django.contrib import admin
-from .models import Product, BestSelling, Notification, Category
+from .models import Product, BestSelling, Notification, Category, ProductColor
+
+
+class ProductColorInline(admin.TabularInline):
+    model = ProductColor
+    extra = 1
+    fields = ['name', 'image', 'order', 'is_active']
 
 
 @admin.register(Category)
@@ -33,6 +39,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_filter = ['category', 'is_active', 'created_at']
     search_fields = ['name', 'description']
     list_editable = ['is_active', 'stock']
+    inlines = [ProductColorInline]
     fieldsets = (
         ('Product Information', {
             'fields': ('name', 'description', 'category')

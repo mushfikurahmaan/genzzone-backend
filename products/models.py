@@ -109,6 +109,38 @@ class Product(models.Model):
         return self.offer_price is not None and self.offer_price < self.regular_price
 
 
+class ProductColor(models.Model):
+    """Model for product color options with images"""
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='colors'
+    )
+    name = models.CharField(
+        max_length=100,
+        help_text='Color name (e.g., Red, Blue, Navy Blue)'
+    )
+    image = models.ImageField(
+        upload_to='products/colors/',
+        help_text='Image showing the product in this color'
+    )
+    order = models.PositiveIntegerField(
+        default=0,
+        help_text='Display order (lower numbers appear first)'
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'name']
+        verbose_name = 'Product Color'
+        verbose_name_plural = 'Product Colors'
+
+    def __str__(self):
+        return f"{self.product.name} - {self.name}"
+
+
 class BestSelling(models.Model):
     """Model to mark products as best selling"""
     product = models.OneToOneField(
