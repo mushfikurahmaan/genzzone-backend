@@ -86,7 +86,8 @@ class CreateOrderView(APIView):
                 'product': product,
                 'quantity': quantity,
                 'price': unit_price,
-                'product_size': product_data.get('product_size', '')
+                'product_size': product_data.get('product_size', ''),
+                'product_image': product_data.get('product_image', '')
             })
         
         # Get or create session key
@@ -118,7 +119,8 @@ class CreateOrderView(APIView):
                     product=product_info['product'],
                     quantity=product_info['quantity'],
                     price=product_info['price'],
-                    product_size=product_info['product_size']
+                    product_size=product_info['product_size'],
+                    product_image=product_info['product_image']
                 )
                 
                 # Reduce product stock atomically
