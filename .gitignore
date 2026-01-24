@@ -86,3 +86,5 @@ Thumbs.db
 **/*.p12
 **/*.pfx
 
+#Others
+db.sh
