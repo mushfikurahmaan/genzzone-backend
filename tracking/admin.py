@@ -17,6 +17,6 @@ class TrackingCodeAdmin(admin.ModelAdmin):
         }),
         ('Script content', {
             'fields': ('script_content', 'noscript_content'),
-            'description': 'Paste only the inner JS (no <script> tags) in Script content. Optional <noscript> HTML in Noscript content.',
+            'description': 'Paste only the inner JavaScript in Script content (do not include the outer script tags). Optional noscript fallback HTML in Noscript content.',
         }),
     )
