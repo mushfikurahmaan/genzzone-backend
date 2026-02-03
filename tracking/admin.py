@@ -10,3 +10,13 @@ class TrackingCodeAdmin(admin.ModelAdmin):
     search_fields = ['name', 'script_id', 'provider']
     prepopulated_fields = {'script_id': ('name',)}
     ordering = ['order', 'name']
+    save_on_top = True  # Puts "Save" / "Save and continue" at the top of the add/edit form
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'script_id', 'provider', 'placement', 'order', 'is_active'),
+        }),
+        ('Script content', {
+            'fields': ('script_content', 'noscript_content'),
+            'description': 'Paste only the inner JS (no <script> tags) in Script content. Optional <noscript> HTML in Noscript content.',
+        }),
+    )
