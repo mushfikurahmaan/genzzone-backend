@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product, BestSelling, Notification, Category, ProductColor
+from .models import Product, BestSelling, Notification, Category, ProductColor, HeroImage
 
 
 class ProductColorInline(admin.TabularInline):
@@ -91,6 +91,25 @@ class NotificationAdmin(admin.ModelAdmin):
         ('Notification Message', {
             'fields': ('message', 'is_active'),
             'description': 'Only one notification can be active at a time. Activating a notification will deactivate others.'
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+    readonly_fields = ['created_at', 'updated_at']
+
+
+@admin.register(HeroImage)
+class HeroImageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'title', 'subtitle', 'is_active', 'created_at', 'updated_at']
+    list_filter = ['is_active', 'created_at']
+    search_fields = ['title', 'subtitle']
+    list_editable = ['is_active']
+    fieldsets = (
+        ('Hero Image', {
+            'fields': ('image', 'title', 'subtitle', 'is_active'),
+            'description': 'Upload the hero banner image for your homepage. Only one hero image can be active at a time.'
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),

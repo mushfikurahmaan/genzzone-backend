@@ -2,10 +2,10 @@ from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Product, BestSelling, Notification, Category
+from .models import Product, BestSelling, Notification, Category, HeroImage
 from .serializers import (
     ProductSerializer, BestSellingSerializer, NotificationSerializer,
-    CategorySerializer, CategoryTreeSerializer
+    CategorySerializer, CategoryTreeSerializer, HeroImageSerializer
 )
 
 
@@ -90,3 +90,19 @@ class NotificationViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(notification)
             return Response(serializer.data)
         return Response({'message': '', 'is_active': False})
+
+
+class HeroImageViewSet(viewsets.ModelViewSet):
+    """ViewSet for managing hero images (CRUD + get active for frontend)."""
+    queryset = HeroImage.objects.all()
+    serializer_class = HeroImageSerializer
+    permission_classes = [AllowAny]
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get the currently active hero image for the website."""
+        hero = HeroImage.objects.filter(is_active=True).first()
+        if hero:
+            serializer = self.get_serializer(hero)
+            return Response(serializer.data)
+        return Response(None)

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, BestSelling, Notification, Category, ProductColor
+from .models import Product, BestSelling, Notification, Category, ProductColor, HeroImage
 
 
 class CategoryChildSerializer(serializers.ModelSerializer):
@@ -95,5 +95,14 @@ class NotificationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Notification
         fields = ['id', 'message', 'is_active', 'created_at', 'updated_at']
+        read_only_fields = ['created_at', 'updated_at']
+
+
+class HeroImageSerializer(serializers.ModelSerializer):
+    """Serializer for HeroImage model"""
+    
+    class Meta:
+        model = HeroImage
+        fields = ['id', 'image', 'title', 'subtitle', 'is_active', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
 

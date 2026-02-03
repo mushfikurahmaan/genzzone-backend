@@ -191,3 +191,41 @@ class Notification(models.Model):
         if self.is_active:
             Notification.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
         super().save(*args, **kwargs)
+
+
+class HeroImage(models.Model):
+    """Model for the website hero section image (and optional overlay text)."""
+    image = models.ImageField(
+        upload_to='hero/',
+        help_text='Hero banner image displayed on the homepage'
+    )
+    title = models.CharField(
+        max_length=200,
+        blank=True,
+        help_text='Optional headline text overlay on the hero'
+    )
+    subtitle = models.CharField(
+        max_length=300,
+        blank=True,
+        help_text='Optional subtext overlay on the hero'
+    )
+    is_active = models.BooleanField(
+        default=True,
+        help_text='Only the active hero image is shown on the site'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Hero Image'
+        verbose_name_plural = 'Hero Images'
+
+    def __str__(self):
+        return self.title or f'Hero Image #{self.pk}'
+
+    def save(self, *args, **kwargs):
+        # Ensure only one active hero image at a time
+        if self.is_active:
+            HeroImage.objects.filter(is_active=True).exclude(pk=self.pk).update(is_active=False)
+        super().save(*args, **kwargs)

@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/csrf/', get_csrf_token, name='csrf'),
     path('', include('products.urls')),
     path('', include('orders.urls')),
+    path('', include('tracking.urls')),
 ]
 
 # Serve media files in development
