@@ -6,7 +6,7 @@ class TrackingCode(models.Model):
 
     script_content = models.TextField(
         blank=True,
-        help_text='Paste your tracking code (e.g. Meta Pixel). You can include <script> tags; they will be stripped before injection.',
+        help_text='Paste the full pixel code (e.g. Meta Pixel: comments, <script> and <noscript>). Rendered on the frontend as-is.',
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
