@@ -10,6 +10,6 @@ from .serializers import TrackingCodeSerializer
 @permission_classes([AllowAny])
 def tracking_code_list(request):
     """Return active tracking codes for frontend injection. No auth required."""
-    qs = TrackingCode.objects.filter(is_active=True).order_by('order', 'name')
+    qs = TrackingCode.objects.filter(is_active=True).order_by('id')
     serializer = TrackingCodeSerializer(qs, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
