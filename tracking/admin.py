@@ -17,8 +17,8 @@ class TrackingCodeAdmin(admin.ModelAdmin):
         (None, {
             'fields': ('script_content', 'is_active'),
             'description': (
-                'Paste your full pixel code here (e.g. Meta Pixel). Include everything: comments, '
-                '<script>...</script> and <noscript>...</noscript>. It will be rendered on the frontend as-is.'
+                "Paste your full pixel code here (e.g. Meta Pixel). Include everything: comments, "
+                "<script>...</script> and <noscript>...</noscript>. It will be rendered on the frontend as-is."
             ),
         }),
     )
