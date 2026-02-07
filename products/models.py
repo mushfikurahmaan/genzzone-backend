@@ -89,6 +89,12 @@ class Product(models.Model):
     image4 = models.ImageField(upload_to='products/', blank=True, null=True, help_text='Fourth product image')
     stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
+    # Size options: list of {"label": "Shirt Size", "options": ["S", "M", "L"]}. Empty = use default "Size: One Size"
+    size_options = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of size dimensions, e.g. [{"label": "Shirt Size", "options": ["S", "M", "L"]}]. Empty uses default "Size: One Size".'
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

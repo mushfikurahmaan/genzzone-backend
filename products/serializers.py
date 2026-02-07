@@ -49,6 +49,10 @@ class ProductColorSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'image', 'order', 'is_active']
 
 
+# Default size options for products with no size_options (existing products)
+DEFAULT_SIZE_OPTIONS = [{'label': 'Size', 'options': ['One Size']}]
+
+
 class ProductSerializer(serializers.ModelSerializer):
     """Serializer for Product model"""
     current_price = serializers.ReadOnlyField()
@@ -63,18 +67,34 @@ class ProductSerializer(serializers.ModelSerializer):
     category_slug = serializers.CharField(source='category.slug', read_only=True)
     # Include product colors (only active ones)
     colors = serializers.SerializerMethodField()
-    
+    # Size options: list of {label, options}. Empty/null returns default for existing products.
+    size_options = serializers.SerializerMethodField()
+
     def get_colors(self, obj):
         active_colors = obj.colors.filter(is_active=True)
         return ProductColorSerializer(active_colors, many=True, context=self.context).data
-    
+
+    def get_size_options(self, obj):
+        opts = obj.size_options if hasattr(obj, 'size_options') and obj.size_options else []
+        if not opts or not isinstance(opts, list):
+            return DEFAULT_SIZE_OPTIONS
+        # Validate shape: list of {label: str, options: list}
+        result = []
+        for item in opts:
+            if isinstance(item, dict) and 'label' in item and 'options' in item:
+                label = item.get('label', '')
+                options = item.get('options', [])
+                if isinstance(options, list) and label:
+                    result.append({'label': str(label), 'options': [str(o) for o in options]})
+        return result if result else DEFAULT_SIZE_OPTIONS
+
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'category', 'category_id', 'category_slug',
-            'regular_price', 'offer_price', 'current_price', 'has_offer', 
-            'image', 'image2', 'image3', 'image4', 'stock', 'is_active', 
-            'colors', 'created_at', 'updated_at'
+            'regular_price', 'offer_price', 'current_price', 'has_offer',
+            'image', 'image2', 'image3', 'image4', 'stock', 'is_active',
+            'colors', 'size_options', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at', 'current_price', 'has_offer']
 

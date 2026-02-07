@@ -55,6 +55,10 @@ class ProductAdmin(admin.ModelAdmin):
         ('Inventory', {
             'fields': ('stock', 'is_active')
         }),
+        ('Size options', {
+            'fields': ('size_options',),
+            'description': 'JSON array of size dimensions, e.g. [{"label": "Shirt Size", "options": ["S", "M", "L"]}, {"label": "Pants Size", "options": ["28", "30", "32"]}]. Leave empty for default "Size: One Size".'
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)

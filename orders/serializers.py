@@ -94,7 +94,8 @@ class ProductOrderItemSerializer(serializers.Serializer):
     """Serializer for individual product in order"""
     product_id = serializers.IntegerField()
     product_name = serializers.CharField(required=False, allow_blank=True)
-    product_size = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    product_size = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    product_sizes = serializers.JSONField(required=False, default=dict)  # e.g. {"Shirt Size": "M", "Pants Size": "30"}
     product_color = serializers.CharField(max_length=100, required=False, allow_blank=True)
     product_image = serializers.URLField(max_length=500, required=False, allow_blank=True, allow_null=True)
     quantity = serializers.IntegerField(min_value=1)
