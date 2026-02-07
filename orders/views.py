@@ -5,8 +5,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.db.models import F
 from django.db import transaction
 from django.http import JsonResponse
-from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import ensure_csrf_cookie, csrf_exempt
 from django.views.decorators.http import require_http_methods
+from django.utils.decorators import method_decorator
 from .models import Cart, CartItem, Order, OrderItem
 from .serializers import (
     SimpleOrderSerializer, OrderSerializer, CartSerializer,
@@ -29,8 +30,9 @@ def get_csrf_token(request):
     return JsonResponse({'detail': 'CSRF cookie set'})
 
 
+@method_decorator(csrf_exempt, name='dispatch')
 class CreateOrderView(APIView):
-    """API view for creating a new order with multiple products"""
+    """API view for creating a new order with multiple products. CSRF exempt for public cross-origin POST."""
     permission_classes = [AllowAny]
 
     def post(self, request):
