@@ -82,19 +82,16 @@ class CreateOrderView(APIView):
             if unit_price is None:
                 unit_price = product.current_price
             
-            # Build product_size display string from product_sizes if provided
+            # product_sizes: validated dict from serializer (label -> selected value). Build display string for product_size.
             product_sizes = product_data.get('product_sizes') or {}
-            if isinstance(product_sizes, dict) and product_sizes:
-                product_size_str = ', '.join(f'{k}: {v}' for k, v in product_sizes.items())
-            else:
-                product_size_str = product_data.get('product_size', '') or ''
+            product_size_str = ', '.join(f'{k}: {v}' for k, v in product_sizes.items()) if product_sizes else (product_data.get('product_size') or '')
 
             products_to_order.append({
                 'product': product,
                 'quantity': quantity,
                 'price': unit_price,
                 'product_size': product_size_str,
-                'product_sizes': product_sizes if isinstance(product_sizes, dict) else {},
+                'product_sizes': product_sizes,
                 'product_color': product_data.get('product_color', ''),
                 'product_image': product_data.get('product_image', '')
             })

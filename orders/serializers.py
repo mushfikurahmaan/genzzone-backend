@@ -91,16 +91,28 @@ class CreateOrderSerializer(serializers.Serializer):
 
 
 class ProductOrderItemSerializer(serializers.Serializer):
-    """Serializer for individual product in order"""
+    """
+    Serializer for one product line item in the place-order payload.
+    Expects product_sizes as a dict of (label -> selected value) for the new multi-size flow.
+    Example: {"product_id": 1, "product_sizes": {"Shirt Size": "M", "Pants Size": "30"}, ...}
+    """
     product_id = serializers.IntegerField()
     product_name = serializers.CharField(required=False, allow_blank=True)
     product_size = serializers.CharField(max_length=255, required=False, allow_blank=True)
-    product_sizes = serializers.JSONField(required=False, default=dict)  # e.g. {"Shirt Size": "M", "Pants Size": "30"}
+    product_sizes = serializers.JSONField(required=False, default=dict)
     product_color = serializers.CharField(max_length=100, required=False, allow_blank=True)
     product_image = serializers.URLField(max_length=500, required=False, allow_blank=True, allow_null=True)
     quantity = serializers.IntegerField(min_value=1)
     unit_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
     product_total = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+
+    def validate_product_sizes(self, value):
+        if value is None:
+            return {}
+        if not isinstance(value, dict):
+            raise serializers.ValidationError('product_sizes must be an object (label -> value).')
+        # Normalize to str keys and str values
+        return {str(k): str(v) for k, v in value.items() if v is not None and str(v).strip()}
 
 
 class SimpleOrderSerializer(serializers.Serializer):
