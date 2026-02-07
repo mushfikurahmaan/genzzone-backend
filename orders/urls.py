@@ -1,4 +1,5 @@
 from django.urls import path
+from django.views.decorators.csrf import csrf_exempt
 from .views import (
     CreateOrderView, CartView, AddToCartView,
     UpdateCartItemView, RemoveCartItemView,
@@ -6,7 +7,7 @@ from .views import (
 )
 
 urlpatterns = [
-    path('api/orders/create/', CreateOrderView.as_view(), name='create-order'),
+    path('api/orders/create/', csrf_exempt(CreateOrderView.as_view()), name='create-order'),
     path('api/cart/', CartView.as_view(), name='cart'),
     path('api/cart/add/', AddToCartView.as_view(), name='add-to-cart'),
     path('api/cart/items/<int:item_id>/', UpdateCartItemView.as_view(), name='update-cart-item'),
