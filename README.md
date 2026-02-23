@@ -107,17 +107,65 @@ The API will be available at `http://localhost:8000`
 
 ```
 genzzone-backend/
-├── backend/          # Django project settings
-│   ├── settings.py   # Production settings
-│   ├── urls.py       # URL configuration
-│   ├── wsgi.py       # WSGI configuration
-│   └── asgi.py       # ASGI configuration
+├── backend/                 # Django project settings
+│   ├── settings.py          # Production settings
+│   ├── settings_local.py    # Local development settings (SQLite, no R2)
+│   ├── urls.py              # URL configuration
+│   ├── wsgi.py              # WSGI configuration
+│   └── asgi.py              # ASGI configuration
 ├── products/         # Products app
 ├── orders/           # Orders app
 ├── manage.py         # Django management script
 ├── requirements.txt  # Python dependencies
 └── Procfile          # Railway deployment config
 ```
+
+## Local Development
+
+The project ships with a dedicated `backend/settings_local.py` for local development. It uses **SQLite** and **local file storage** — no environment variables or external services are required.
+
+### Activate local settings
+
+**Option A — per-command flag (recommended):**
+```bash
+python manage.py runserver --settings=backend.settings_local
+python manage.py migrate --settings=backend.settings_local
+python manage.py createsuperuser --settings=backend.settings_local
+```
+
+**Option B — export once per shell session:**
+```bash
+export DJANGO_SETTINGS_MODULE=backend.settings_local
+python manage.py runserver
+```
+
+### What the local settings change vs production
+
+| Setting | Production (`settings.py`) | Local (`settings_local.py`) |
+|---|---|---|
+| `DATABASE` | PostgreSQL via `DATABASE_URL` | SQLite (`db.sqlite3`) |
+| `DEBUG` | `False` | `True` |
+| File storage | Cloudflare R2 (`S3Boto3Storage`) | Local filesystem |
+| `MEDIA_URL` | `https://media.genzzone.com/` | `/media/` |
+| `CSRF_COOKIE_DOMAIN` | `.genzzone.com` | `None` |
+| `CSRF_COOKIE_SAMESITE` | `None` | `Lax` |
+| `CSRF_COOKIE_SECURE` | `True` | `False` |
+| `SESSION_COOKIE_DOMAIN` | `.genzzone.com` | `None` |
+| Required env vars | Several (SECRET_KEY, DATABASE_URL, R2_*, …) | None |
+
+### Quick start (first time)
+
+```bash
+python manage.py migrate --settings=backend.settings_local
+python manage.py createsuperuser --settings=backend.settings_local
+python manage.py runserver --settings=backend.settings_local
+```
+
+The API will be available at `http://localhost:8000` and the admin panel at `http://localhost:8000/admin/`.
+
+> **Note:** `settings_local.py` is safe to commit — it contains no secrets and is never loaded in production. Production deployments on Railway always use `backend.settings` (the default in `manage.py` and `wsgi.py`).
+
+---
 
 ## Development
 

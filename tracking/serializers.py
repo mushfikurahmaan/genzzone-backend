@@ -5,4 +5,4 @@ from .models import TrackingCode
 class TrackingCodeSerializer(serializers.ModelSerializer):
     class Meta:
         model = TrackingCode
-        fields = ['script_content']
+        fields = ['pixel_id']

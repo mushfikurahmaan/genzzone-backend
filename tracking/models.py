@@ -2,11 +2,12 @@ from django.db import models
 
 
 class TrackingCode(models.Model):
-    """Stores the tracking pixel/script to inject (e.g. Meta Pixel). Paste the full code here."""
+    """Stores the Meta (Facebook) Pixel ID for frontend tracking."""
 
-    script_content = models.TextField(
+    pixel_id = models.CharField(
+        max_length=50,
         blank=True,
-        help_text='Paste the full pixel code (e.g. Meta Pixel: comments, <script> and <noscript>). Rendered on the frontend as-is.',
+        help_text='Meta (Facebook) Pixel ID (e.g. 1234567890123456).',
     )
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -88,5 +88,5 @@ Thumbs.db
 
 #Others
 db.sh
-run_local.sh
+runlocal.sh
 settings_local.py
