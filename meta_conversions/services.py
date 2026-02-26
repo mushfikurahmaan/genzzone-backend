@@ -175,6 +175,7 @@ def send_purchase_event(
         "event_name": "Purchase",
         "event_time": event_time,
         "action_source": "website",
+        "event_id": f"order_{order_id}",
         "user_data": user_data,
         "custom_data": custom_data,
     }
