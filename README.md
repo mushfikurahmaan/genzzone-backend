@@ -55,6 +55,13 @@ DATABASE_URL=sqlite:///db.sqlite3
 CORS_ALLOWED_ORIGINS=http://localhost:3000
 STEADFAST_API_KEY=your-api-key
 STEADFAST_SECRET_KEY=your-secret-key
+
+# Meta Conversions API (optional - server-side Facebook events)
+META_CONVERSIONS_ACCESS_TOKEN=your-facebook-access-token
+META_CONVERSIONS_PIXEL_ID=your-pixel-id
+META_CONVERSIONS_API_VERSION=v21.0
+# Set this to route events to Test Events (e.g. TEST12345) for safe testing
+META_CONVERSIONS_TEST_EVENT_CODE=
 ```
 
 5. Run migrations:

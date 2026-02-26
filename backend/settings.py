@@ -34,7 +34,7 @@ INSTALLED_APPS = [
     'products',
     'orders',
     'accounts',
-    'tracking',
+    'meta_conversions',
 ]
 
 # Middleware
@@ -151,6 +151,12 @@ STEADFAST_SECRET_KEY = os.environ.get('STEADFAST_SECRET_KEY')
 
 # Admin URL path (for security - use a custom path in production)
 ADMIN_URL_PATH = os.environ.get('ADMIN_URL_PATH', 'admin/')
+
+# Meta Conversions API (server-side events)
+META_CONVERSIONS_ACCESS_TOKEN = os.environ.get('META_CONVERSIONS_ACCESS_TOKEN')
+META_CONVERSIONS_PIXEL_ID = os.environ.get('META_CONVERSIONS_PIXEL_ID')
+META_CONVERSIONS_API_VERSION = os.environ.get('META_CONVERSIONS_API_VERSION', 'v25.0')
+META_CONVERSIONS_TEST_EVENT_CODE = os.environ.get('META_CONVERSIONS_TEST_EVENT_CODE', '').strip() or None
 
 
 # ========= Cloudflare R2  =========

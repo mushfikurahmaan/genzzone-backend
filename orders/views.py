@@ -15,6 +15,7 @@ from .serializers import (
 )
 from .steadfast_service import SteadfastService
 from products.models import Product
+from meta_conversions.services import send_purchase_event, send_add_to_cart_event
 import logging
 
 logger = logging.getLogger(__name__)
@@ -140,7 +141,25 @@ class CreateOrderView(APIView):
         
         # Order is saved and will be sent to Steadfast later via admin panel
         logger.info(f"Order {order.id} created successfully with {len(products_to_order)} product(s). Waiting for admin approval to send to Steadfast.")
-        
+
+        # Send Purchase event to Meta Conversions API (non-blocking)
+        try:
+            content_ids = [str(p['product'].id) for p in products_to_order]
+            num_items = sum(p['quantity'] for p in products_to_order)
+            send_purchase_event(
+                request,
+                order_id=order.id,
+                value=float(total_amount),
+                currency='BDT',
+                customer_name=data['customer_name'],
+                customer_phone=data['phone_number'],
+                customer_email=order.customer_email or '',
+                content_ids=content_ids,
+                num_items=num_items,
+            )
+        except Exception as e:
+            logger.warning("Meta Conversions Purchase event failed: %s", e)
+
         # Return the created order
         order_serializer = OrderSerializer(order)
         return Response(order_serializer.data, status=status.HTTP_201_CREATED)
@@ -242,6 +261,17 @@ class AddToCartView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
         
+        # Send AddToCart event to Meta Conversions API (non-blocking)
+        try:
+            event_source_url = request.META.get('HTTP_REFERER') or request.META.get('HTTP_ORIGIN')
+            send_add_to_cart_event(
+                request,
+                product_id=product_id,
+                event_source_url=event_source_url,
+            )
+        except Exception as e:
+            logger.warning("Meta Conversions AddToCart event failed: %s", e)
+
         # Return updated cart
         cart_serializer = CartSerializer(cart)
         return Response(cart_serializer.data, status=status.HTTP_200_OK)
