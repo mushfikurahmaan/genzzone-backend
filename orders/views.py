@@ -146,6 +146,9 @@ class CreateOrderView(APIView):
         try:
             content_ids = [str(p['product'].id) for p in products_to_order]
             num_items = sum(p['quantity'] for p in products_to_order)
+            event_source_url = data.get('event_source_url') or None
+            if event_source_url and '?' not in event_source_url:
+                event_source_url = f"{event_source_url}?orderId={order.id}"
             send_purchase_event(
                 request,
                 order_id=order.id,
@@ -156,6 +159,7 @@ class CreateOrderView(APIView):
                 customer_email=order.customer_email or '',
                 content_ids=content_ids,
                 num_items=num_items,
+                event_source_url=event_source_url,
             )
         except Exception as e:
             logger.warning("Meta Conversions Purchase event failed: %s", e)

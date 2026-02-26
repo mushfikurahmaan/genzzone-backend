@@ -130,6 +130,7 @@ def send_purchase_event(
     customer_email: str = "",
     content_ids: Optional[list[str]] = None,
     num_items: Optional[int] = None,
+    event_source_url: Optional[str] = None,
 ) -> bool:
     """
     Send Purchase event to Meta Conversions API.
@@ -177,6 +178,11 @@ def send_purchase_event(
         "user_data": user_data,
         "custom_data": custom_data,
     }
+
+    # Required for website events - uniquely identifies where purchase occurred
+    url = event_source_url or request.META.get("HTTP_REFERER") or request.META.get("HTTP_ORIGIN")
+    if url:
+        event["event_source_url"] = url
 
     test_code = getattr(settings, "META_CONVERSIONS_TEST_EVENT_CODE", None)
     if test_code and str(test_code).strip():

@@ -125,4 +125,6 @@ class SimpleOrderSerializer(serializers.Serializer):
     product_total = serializers.DecimalField(max_digits=10, decimal_places=2)
     delivery_charge = serializers.DecimalField(max_digits=10, decimal_places=2)
     total_price = serializers.DecimalField(max_digits=10, decimal_places=2)
+    # Optional: success page URL for Conversions API event_source_url (uniquely identifies purchase context)
+    event_source_url = serializers.URLField(required=False, allow_blank=True)
 
