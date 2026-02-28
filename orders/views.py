@@ -87,7 +87,7 @@ class CreateOrderView(APIView):
             
             # product_sizes: validated dict from serializer (label -> selected value). Build display string for product_size.
             product_sizes = product_data.get('product_sizes') or {}
-            product_size_str = ', '.join(f'{k}: {v}' for k, v in product_sizes.items()) if product_sizes else (product_data.get('product_size') or '')
+            product_size_str = ', '.join(product_sizes.values()) if product_sizes else (product_data.get('product_size') or '')
 
             products_to_order.append({
                 'product': product,

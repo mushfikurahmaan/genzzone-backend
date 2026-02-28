@@ -34,8 +34,8 @@ class UsedStatusFilter(admin.SimpleListFilter):
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
     extra = 0
-    readonly_fields = ['image_preview', 'created_at', 'subtotal_display']
-    fields = ['product', 'image_preview', 'quantity', 'price', 'product_size', 'product_color', 'subtotal_display', 'created_at']
+    readonly_fields = ['image_preview', 'size_display', 'created_at', 'subtotal_display']
+    fields = ['product', 'image_preview', 'quantity', 'price', 'size_display', 'product_color', 'subtotal_display', 'created_at']
     
     formfield_overrides = {
         forms.fields.IntegerField: {'widget': forms.NumberInput(attrs={'style': 'width: 60px;'})},
@@ -48,8 +48,6 @@ class OrderItemInline(admin.TabularInline):
             field.widget.attrs['style'] = 'width: 60px;'
         elif db_field.name == 'price':
             field.widget.attrs['style'] = 'width: 90px;'
-        elif db_field.name == 'product_size':
-            field.widget.attrs['style'] = 'width: 70px;'
         elif db_field.name == 'product_color':
             field.widget.attrs['style'] = 'width: 100px;'
         return field
@@ -71,7 +69,14 @@ class OrderItemInline(admin.TabularInline):
             )
         return "-"
     image_preview.short_description = 'Image'
-    
+
+    def size_display(self, obj):
+        """Display only size values (e.g. M, 30) without option names like Shirt Size, Pants Size."""
+        if obj.product_sizes:
+            return ', '.join(obj.product_sizes.values())
+        return obj.product_size or '-'
+    size_display.short_description = 'Size'
+
     def subtotal_display(self, obj):
         """Display subtotal for order item"""
         if obj.pk:
