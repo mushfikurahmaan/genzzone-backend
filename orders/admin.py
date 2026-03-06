@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.utils.translation import gettext_lazy as _
 from django.utils.html import format_html
 from django import forms
+from django.db.models import Count, Sum
 from .models import Order, OrderItem
 from .steadfast_service import SteadfastService
 import logging
@@ -113,6 +114,14 @@ class OrderAdmin(admin.ModelAdmin):
         }),
     )
 
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # Annotate so list view get_item_count avoids N+1 (no per-row .items.all()/.count())
+        return qs.prefetch_related('items').annotate(
+            _item_count=Count('items'),
+            _total_quantity=Sum('items__quantity'),
+        )
+
     def get_steadfast_status(self, obj):
         """Display Steadfast status in list view"""
         if obj.steadfast_consignment_id:
@@ -122,7 +131,11 @@ class OrderAdmin(admin.ModelAdmin):
     get_steadfast_status.admin_order_field = 'steadfast_consignment_id'
 
     def get_item_count(self, obj):
-        """Display total number of items in order"""
+        """Display total number of items in order (uses annotated values to avoid N+1 in list view)."""
+        item_count = getattr(obj, '_item_count', None)
+        total_quantity = getattr(obj, '_total_quantity', None)
+        if item_count is not None:
+            return f"{item_count} item(s), {total_quantity or 0} total"
         total_quantity = sum(item.quantity for item in obj.items.all())
         item_count = obj.items.count()
         return f"{item_count} item(s), {total_quantity} total"
